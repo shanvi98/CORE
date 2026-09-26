@@ -1,0 +1,53 @@
+{
+  "roc_auc": 0.7685,
+  "pr_auc": 0.3662,
+  "lr_roc_auc": 0.779,
+  "lr_pr_auc": 0.4006,
+  "brier_raw": 0.0892,
+  "brier_calibrated": 0.0861,
+  "base_rate": 0.114,
+  "accuracy_predict_all_zero": 0.8848,
+  "accuracy_at_threshold": 0.7201,
+  "precision_at_threshold": 0.2442,
+  "recall_at_threshold": 0.6816,
+  "flag_share_at_threshold": 0.3217,
+  "confusion_matrix_at_threshold": [
+    [
+      1364,
+      517
+    ],
+    [
+      78,
+      167
+    ]
+  ],
+  "threshold": 0.1118,
+  "threshold_theoretical": 0.1118,
+  "threshold_ritu_figure": 0.2143,
+  "net_per_1000_at_threshold": 17138.99,
+  "backtest_auc_mean": 0.7526,
+  "backtest_auc_std": 0.0079,
+  "backtest_folds": [
+    {
+      "fold": "2025-Q4",
+      "n": 2082,
+      "return_rate": 0.1081,
+      "auc": 0.7414,
+      "pr_auc": 0.3169
+    },
+    {
+      "fold": "2026-Q1",
+      "n": 2126,
+      "return_rate": 0.1162,
+      "auc": 0.7586,
+      "pr_auc": 0.3404
+    },
+    {
+      "fold": "2026-Q2",
+      "n": 2126,
+      "return_rate": 0.1152,
+      "auc": 0.7579,
+      "pr_auc": 0.3578
+    }
+  ]
+}

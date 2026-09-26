@@ -1,0 +1,34 @@
+feature,mean_abs_shap,group
+is_cod,0.22357049291642309,Payment
+sku,0.2100435033255359,Product
+promised_delivery_days,0.19090602432207426,Delivery promise
+shield_member,0.17866957092826663,Shield membership
+prior_returns,0.15037717884569485,Customer history
+prior_return_rate_smoothed,0.08805192265644422,Customer history
+discount_pct,0.08071711943289898,Discount & price
+payment_mode,0.06151965254258746,Payment
+list_price,0.047790933320542864,Product
+order_value,0.04479588467606675,Discount & price
+pin_zone,0.02734762965877147,Address
+state,0.026754569187622274,Customer tenure
+prior_orders,0.025374265896206605,Customer history
+family,0.02321314556406198,Product
+sales_channel,0.022760812673761264,Channel
+is_gift,0.020282968710494502,Gift
+note_type,0.01677367660935758,Address
+warranty_months,0.010985745753690292,Product
+tenure_days,0.006692584684906359,Customer tenure
+hour,0.006565959152271702,Order timing
+ever_returned,0.005871298252658767,Customer history
+product_age_days,0.005870523041029024,Product
+slow_promise,0.004874524419255387,Delivery promise
+day_of_week,0.004766187152267274,Order timing
+tier,0.001839517110830318,Product
+is_festive_window,0.0010685595389089014,Order timing
+has_note,0.0004076221268616762,Address
+pin_missing,0.0,Address
+is_weekend,0.0,Order timing
+is_first_order,0.0,Customer history
+signup_after_order,0.0,Customer tenure
+price_realisation,0.0,Discount & price
+qty,0.0,Discount & price

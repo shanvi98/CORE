@@ -1,0 +1,6 @@
+{
+  "accuracy_with_pickup_leak": 0.9854,
+  "accuracy_without_leak": 0.8913,
+  "accuracy_predict_all_zero": 0.8848,
+  "note": "pickup_scheduled_at is blank for every row of test_unlabelled.csv, so the leaky model's high accuracy here cannot be reproduced at dispatch time."
+}

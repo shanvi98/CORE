@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kestrel — Returns Risk Check</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f7f7f5; --card: #ffffff; --text: #1a1a1a; --muted: #6b7280;
+    --border: #e5e7eb; --accent: #2563eb;
+    --green-bg: #ecfdf5; --green-text: #047857; --green-border: #a7f3d0;
+    --amber-bg: #fffbeb; --amber-text: #92400e; --amber-border: #fde68a;
+    --red-bg: #fef2f2; --red-text: #b91c1c; --red-border: #fecaca;
+    --grey-bg: #f3f4f6; --grey-text: #4b5563; --grey-border: #e5e7eb;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16181d; --card: #1f2229; --text: #f2f2f2; --muted: #9aa1ac;
+      --border: #2e323b; --accent: #60a5fa;
+      --green-bg: #06281f; --green-text: #34d399; --green-border: #0f4b38;
+      --amber-bg: #2b2107; --amber-text: #fbbf24; --amber-border: #4a3a0c;
+      --red-bg: #2a1414; --red-text: #f87171; --red-border: #4a1f1f;
+      --grey-bg: #23262d; --grey-text: #c2c7d0; --grey-border: #2e323b;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #16181d; --card: #1f2229; --text: #f2f2f2; --muted: #9aa1ac;
+    --border: #2e323b; --accent: #60a5fa;
+    --green-bg: #06281f; --green-text: #34d399; --green-border: #0f4b38;
+    --amber-bg: #2b2107; --amber-text: #fbbf24; --amber-border: #4a3a0c;
+    --red-bg: #2a1414; --red-text: #f87171; --red-border: #4a1f1f;
+    --grey-bg: #23262d; --grey-text: #c2c7d0; --grey-border: #2e323b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+  main {
+    max-width: 720px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 60px;
+  }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+  h1 { font-size: 19px; margin: 0; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px;
+    border-radius: 999px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--border);
+    background: var(--grey-bg); color: var(--grey-text);
+  }
+  .pill.ok { background: var(--green-bg); color: var(--green-text); border-color: var(--green-border); }
+  .pill.degraded { background: var(--amber-bg); color: var(--amber-text); border-color: var(--amber-border); }
+  .pill.down { background: var(--red-bg); color: var(--red-text); border-color: var(--red-border); }
+  .pill .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px; margin-bottom: 16px;
+  }
+  .card h2 { font-size: 14px; margin: 0 0 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+
+  label { display: block; font-size: 12.5px; color: var(--muted); margin-bottom: 4px; }
+  select, input {
+    width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font-size: 14px; font-family: inherit;
+  }
+  select:focus, input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .field { margin-bottom: 12px; }
+  .field small.err { display: block; color: var(--red-text); margin-top: 4px; min-height: 1em; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+
+  .example-row { margin-bottom: 16px; }
+
+  button#checkBtn {
+    width: 100%; padding: 12px; border-radius: 10px; border: none;
+    background: var(--accent); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  button#checkBtn:disabled { opacity: .55; cursor: not-allowed; }
+
+  .result-score { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .result-score .pct { font-size: 40px; font-weight: 700; line-height: 1; }
+  .band { padding: 4px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; }
+  .band.low { background: var(--green-bg); color: var(--green-text); }
+  .band.medium { background: var(--amber-bg); color: var(--amber-text); }
+  .band.high { background: var(--red-bg); color: var(--red-text); }
+
+  .action-line { font-size: 17px; font-weight: 600; margin-bottom: 2px; }
+  .sub-line { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+
+  .reason-row { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); }
+  .reason-row:first-of-type { border-top: none; }
+  .reason-icon { font-size: 15px; width: 18px; flex: none; text-align: center; }
+  .reason-icon.up { color: var(--red-text); }
+  .reason-icon.down { color: var(--green-text); }
+  .reason-body { flex: 1; min-width: 0; }
+  .reason-text { font-size: 13.5px; }
+  .reason-bar-track { height: 5px; border-radius: 3px; background: var(--grey-bg); margin-top: 6px; overflow: hidden; }
+  .reason-bar-fill { height: 100%; border-radius: 3px; background: var(--accent); }
+
+  .note-box {
+    margin-top: 14px; padding: 10px 12px; border-radius: 8px;
+    background: var(--amber-bg); color: var(--amber-text); border: 1px solid var(--amber-border); font-size: 13px;
+  }
+  ul.warnings { margin: 14px 0 0; padding-left: 18px; color: var(--muted); font-size: 12.5px; }
+  .footer-line { margin-top: 14px; color: var(--muted); font-size: 12px; }
+
+  #errorBox { padding: 12px 14px; border-radius: 10px; font-size: 13.5px; margin-bottom: 16px; border: 1px solid; }
+  #errorBox.err-422 { background: var(--red-bg); color: var(--red-text); border-color: var(--red-border); }
+  #errorBox.err-503 { background: var(--amber-bg); color: var(--amber-text); border-color: var(--amber-border); }
+  #errorBox.err-network, #errorBox.err-500 { background: var(--red-bg); color: var(--red-text); border-color: var(--red-border); }
+  #errorBox ul { margin: 6px 0 0; padding-left: 18px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Kestrel — Returns Risk Check</h1>
+    <span id="healthPill" class="pill"><span class="dot"></span><span id="healthText">Checking…</span></span>
+  </header>
+
+  <div class="card example-row">
+    <label for="exampleSelect">Load example</label>
+    <select id="exampleSelect">
+      <option value="">— choose a preset —</option>
+      <option value="low">Low risk — prepaid, quick delivery</option>
+      <option value="high">High risk — COD gift, slow delivery</option>
+      <option value="shield">Shield customer</option>
+    </select>
+  </div>
+
+  <form id="orderForm" class="card" novalidate>
+    <h2>Order</h2>
+    <div class="grid">
+      <div class="field">
+        <label for="order_id">Order ID</label>
+        <input id="order_id" name="order_id" required>
+        <small class="err" id="err_order_id"></small>
+      </div>
+      <div class="field">
+        <label for="customer_id">Customer ID</label>
+        <input id="customer_id" name="customer_id" required>
+        <small class="err" id="err_customer_id"></small>
+      </div>
+      <div class="field">
+        <label for="order_placed_at">Order placed at</label>
+        <input id="order_placed_at" name="order_placed_at" type="datetime-local" required>
+        <small class="err" id="err_order_placed_at"></small>
+      </div>
+      <div class="field">
+        <label for="sku">Product (SKU)</label>
+        <select id="sku" name="sku" required></select>
+        <small class="err" id="err_sku"></small>
+      </div>
+      <div class="field">
+        <label for="sales_channel">Sales channel</label>
+        <select id="sales_channel" name="sales_channel" required>
+          <option value="app">App</option>
+          <option value="web">Web</option>
+          <option value="marketplace">Marketplace</option>
+          <option value="partner_outlet">Partner outlet</option>
+        </select>
+        <small class="err" id="err_sales_channel"></small>
+      </div>
+      <div class="field">
+        <label for="payment_mode">Payment mode</label>
+        <select id="payment_mode" name="payment_mode" required>
+          <option value="prepaid_upi">Prepaid — UPI</option>
+          <option value="prepaid_card">Prepaid — Card</option>
+          <option value="cod">Cash on delivery</option>
+          <option value="emi">EMI</option>
+        </select>
+        <small class="err" id="err_payment_mode"></small>
+      </div>
+      <div class="field">
+        <label for="discount_pct">Discount %</label>
+        <input id="discount_pct" name="discount_pct" type="number" min="0" max="100" step="1" value="0" required>
+        <small class="err" id="err_discount_pct"></small>
+      </div>
+      <div class="field">
+        <label for="qty">Quantity</label>
+        <input id="qty" name="qty" type="number" min="1" step="1" value="1" required>
+        <small class="err" id="err_qty"></small>
+      </div>
+      <div class="field">
+        <label for="order_value_inr">Order value (₹)</label>
+        <input id="order_value_inr" name="order_value_inr" type="number" min="0.01" step="0.01" required>
+        <small class="err" id="err_order_value_inr"></small>
+      </div>
+      <div class="field">
+        <label for="promised_delivery_days">Promised delivery (days)</label>
+        <input id="promised_delivery_days" name="promised_delivery_days" type="number" min="1" max="30" step="1" value="5" required>
+        <small class="err" id="err_promised_delivery_days"></small>
+      </div>
+      <div class="field">
+        <label for="delivery_pincode">Delivery pincode</label>
+        <input id="delivery_pincode" name="delivery_pincode" pattern="\d{6}" maxlength="6" placeholder="000000 if unknown" required>
+        <small class="err" id="err_delivery_pincode"></small>
+      </div>
+      <div class="field">
+        <label for="is_gift">Gift order?</label>
+        <select id="is_gift" name="is_gift" required>
+          <option value="N">No</option>
+          <option value="Y">Yes</option>
+        </select>
+        <small class="err" id="err_is_gift"></small>
+      </div>
+      <div class="field">
+        <label for="customer_prior_orders">Customer's prior orders</label>
+        <input id="customer_prior_orders" name="customer_prior_orders" type="number" min="0" step="1" value="0" required>
+        <small class="err" id="err_customer_prior_orders"></small>
+      </div>
+      <div class="field">
+        <label for="customer_prior_returns">Customer's prior returns</label>
+        <input id="customer_prior_returns" name="customer_prior_returns" type="number" min="0" step="1" value="0" required>
+        <small class="err" id="err_customer_prior_returns"></small>
+      </div>
+    </div>
+    <div class="field">
+      <label for="delivery_note">Delivery note (optional)</label>
+      <input id="delivery_note" name="delivery_note" maxlength="300">
+      <small class="err" id="err_delivery_note"></small>
+    </div>
+    <button id="checkBtn" type="submit">Check risk</button>
+  </form>
+
+  <div id="errorBox" hidden role="alert"></div>
+
+  <div id="resultCard" class="card" hidden>
+    <h2>Result</h2>
+    <div class="result-score">
+      <span class="pct" id="resScore">—</span>
+      <span class="band" id="resBand">—</span>
+    </div>
+    <div class="action-line" id="resAction">—</div>
+    <div class="sub-line" id="resSub">—</div>
+
+    <h2>Why</h2>
+    <div id="resReasons"></div>
+
+    <div id="resNote" class="note-box" hidden></div>
+    <ul id="resWarnings" class="warnings" hidden></ul>
+    <div class="footer-line" id="resFooter"></div>
+  </div>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var SKUS = [
+    ["KH-AF-01","Air Fryer Lite"], ["KH-AF-02","Air Fryer Pro"], ["KH-AF-03","Air Fryer Max"],
+    ["KH-MG-01","Mixer Grinder Lite"], ["KH-MG-02","Mixer Grinder Pro"], ["KH-MG-03","Mixer Grinder Max"],
+    ["KH-WP-01","Water Purifier Lite"], ["KH-WP-02","Water Purifier Pro"], ["KH-WP-03","Water Purifier Max"],
+    ["KH-RV-01","Robot Vacuum Lite"], ["KH-RV-02","Robot Vacuum Pro"], ["KH-RV-03","Robot Vacuum Max"],
+    ["KH-IC-01","Induction Cooktop Lite"], ["KH-IC-02","Induction Cooktop Pro"], ["KH-IC-03","Induction Cooktop Max"],
+    ["KH-CF-01","Ceiling Fan Lite"], ["KH-CF-02","Ceiling Fan Pro"], ["KH-CF-03","Ceiling Fan Max"],
+    ["KH-RH-01","Room Heater Lite"], ["KH-RH-02","Room Heater Pro"], ["KH-RH-03","Room Heater Max"]
+  ];
+
+  var EXAMPLES = {
+    low: {
+      order_id: "KO-DEMO-LOW", customer_id: "KC104433", sku: "KH-MG-02",
+      sales_channel: "app", payment_mode: "prepaid_upi", discount_pct: 5, qty: 1,
+      order_value_inr: 3799.05, promised_delivery_days: 3, delivery_pincode: "411014",
+      is_gift: "N", customer_prior_orders: 4, customer_prior_returns: 0, delivery_note: ""
+    },
+    high: {
+      order_id: "KO-DEMO-HIGH", customer_id: "KC102883", sku: "KH-RV-03",
+      sales_channel: "marketplace", payment_mode: "cod", discount_pct: 25, qty: 1,
+      order_value_inr: 22273.5, promised_delivery_days: 10, delivery_pincode: "000000",
+      is_gift: "Y", customer_prior_orders: 0, customer_prior_returns: 0, delivery_note: ""
+    },
+    shield: {
+      order_id: "KO-DEMO-SHIELD", customer_id: "KC100001", sku: "KH-WP-02",
+      sales_channel: "web", payment_mode: "prepaid_card", discount_pct: 8, qty: 1,
+      order_value_inr: 13799.08, promised_delivery_days: 4, delivery_pincode: "560001",
+      is_gift: "N", customer_prior_orders: 3, customer_prior_returns: 0, delivery_note: ""
+    }
+  };
+
+  var form = document.getElementById("orderForm");
+  var checkBtn = document.getElementById("checkBtn");
+  var healthPill = document.getElementById("healthPill");
+  var healthText = document.getElementById("healthText");
+  var errorBox = document.getElementById("errorBox");
+  var resultCard = document.getElementById("resultCard");
+  var skuSelect = document.getElementById("sku");
+  var exampleSelect = document.getElementById("exampleSelect");
+
+  function el(tag, props) {
+    var e = document.createElement(tag);
+    if (props) { for (var k in props) { if (k === "class") { e.className = props[k]; } else { e[k] = props[k]; } } }
+    return e;
+  }
+
+  function populateSkus() {
+    SKUS.forEach(function (pair) {
+      var opt = el("option", { value: pair[0] });
+      opt.textContent = pair[1] + " (" + pair[0] + ")";
+      skuSelect.appendChild(opt);
+    });
+  }
+
+  function nowLocalInputValue() {
+    var d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  }
+
+  function clearFieldErrors() {
+    form.querySelectorAll("small.err").forEach(function (s) { s.textContent = ""; });
+  }
+
+  function showError(kind, message, hint) {
+    errorBox.className = "err-" + kind;
+    errorBox.textContent = "";
+    var p = el("div"); p.textContent = message;
+    errorBox.appendChild(p);
+    if (hint) {
+      var h = el("div"); h.style.marginTop = "4px"; h.style.opacity = "0.8"; h.textContent = hint;
+      errorBox.appendChild(h);
+    }
+    errorBox.hidden = false;
+  }
+
+  function hideError() { errorBox.hidden = true; errorBox.textContent = ""; }
+
+  function setHealthPill(cls, text) {
+    healthPill.className = "pill " + cls;
+    healthText.textContent = text;
+  }
+
+  function checkHealth() {
+    fetch("/health").then(function (r) { return r.json(); }).then(function (body) {
+      if (body.status === "ok") {
+        setHealthPill("ok", "Model ready" + (body.model_version ? " · " + body.model_version : ""));
+        checkBtn.disabled = false;
+      } else {
+        setHealthPill("degraded", body.message || "Model not loaded");
+        checkBtn.disabled = true;
+      }
+    }).catch(function () {
+      setHealthPill("down", "Service unreachable");
+      checkBtn.disabled = true;
+    });
+  }
+
+  function fmtInr(n) {
+    try { return "₹" + Number(n).toLocaleString("en-IN"); } catch (e) { return "₹" + n; }
+  }
+
+  function fmtDateTimeLocal(v) {
+    // "YYYY-MM-DDTHH:MM" -> "YYYY-MM-DD HH:MM"
+    return v.replace("T", " ");
+  }
+
+  function collectPayload() {
+    var fd = new FormData(form);
+    var o = {};
+    fd.forEach(function (v, k) { o[k] = v; });
+    ["discount_pct", "order_value_inr"].forEach(function (k) { o[k] = Number(o[k]); });
+    ["qty", "promised_delivery_days", "customer_prior_orders", "customer_prior_returns"].forEach(function (k) {
+      o[k] = parseInt(o[k], 10);
+    });
+    o.order_placed_at = fmtDateTimeLocal(o.order_placed_at || "");
+    if (!o.delivery_note) { o.delivery_note = null; }
+    return o;
+  }
+
+  function renderResult(body) {
+    resultCard.hidden = false;
+    document.getElementById("resScore").textContent = Math.round(body.score * 100) + "%";
+    var band = document.getElementById("resBand");
+    band.className = "band " + body.risk_band;
+    band.textContent = body.risk_band;
+
+    var action = document.getElementById("resAction");
+    var sub = document.getElementById("resSub");
+    if (body.recommended_action === "CALL_BEFORE_DISPATCH") {
+      action.textContent = "📞 Call before dispatch — expected saving ≈ " + fmtInr(body.expected_saving_inr);
+    } else {
+      action.textContent = "✅ Dispatch normally";
+    }
+    sub.textContent = "Calls pay off when risk is above " + Math.round(body.threshold * 100) + "%.";
+
+    var reasonsEl = document.getElementById("resReasons");
+    reasonsEl.textContent = "";
+    var maxImpact = Math.max.apply(null, body.reasons.map(function (r) { return Math.abs(r.impact); }).concat([0.0001]));
+    body.reasons.forEach(function (r) {
+      var row = el("div", { class: "reason-row" });
+      var icon = el("div", { class: "reason-icon " + (r.direction === "increases_risk" ? "up" : "down") });
+      icon.textContent = r.direction === "increases_risk" ? "▲" : "▼";
+      var bodyDiv = el("div", { class: "reason-body" });
+      var text = el("div", { class: "reason-text" });
+      text.textContent = r.text;
+      var track = el("div", { class: "reason-bar-track" });
+      var fill = el("div", { class: "reason-bar-fill" });
+      fill.style.width = Math.max(6, Math.round((Math.abs(r.impact) / maxImpact) * 100)) + "%";
+      track.appendChild(fill);
+      bodyDiv.appendChild(text);
+      bodyDiv.appendChild(track);
+      row.appendChild(icon);
+      row.appendChild(bodyDiv);
+      reasonsEl.appendChild(row);
+    });
+
+    var noteBox = document.getElementById("resNote");
+    if (body.note) { noteBox.hidden = false; noteBox.textContent = body.note; }
+    else { noteBox.hidden = true; noteBox.textContent = ""; }
+
+    var warnEl = document.getElementById("resWarnings");
+    warnEl.textContent = "";
+    if (body.warnings && body.warnings.length) {
+      warnEl.hidden = false;
+      body.warnings.forEach(function (w) {
+        var li = el("li"); li.textContent = w; warnEl.appendChild(li);
+      });
+    } else {
+      warnEl.hidden = true;
+    }
+
+    document.getElementById("resFooter").textContent =
+      "Model " + (body.model_version || "n/a") + " · reasons: " + body.explanation_source;
+  }
+
+  function mapFieldToInputId(field) {
+    var first = (field || "").split(".")[0];
+    return document.getElementById(first) ? first : null;
+  }
+
+  form.addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    hideError();
+    clearFieldErrors();
+    resultCard.hidden = true;
+
+    var payload = collectPayload();
+    checkBtn.disabled = true;
+    checkBtn.textContent = "Checking…";
+
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, 10000);
+
+    fetch("/predict", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    }).then(function (res) {
+      clearTimeout(timer);
+      return res.json().then(function (body) { return { status: res.status, body: body }; });
+    }).then(function (r) {
+      if (r.status === 200) {
+        renderResult(r.body);
+      } else if (r.status === 422) {
+        showError("422", "Please fix the highlighted fields.");
+        (r.body.fields || []).forEach(function (f) {
+          var id = mapFieldToInputId(f.field);
+          if (id) {
+            var errEl = document.getElementById("err_" + id);
+            if (errEl) { errEl.textContent = f.message; }
+          }
+        });
+      } else if (r.status === 503) {
+        showError("503", r.body.message || "The risk model isn't loaded.", r.body.hint);
+      } else if (r.status === 500) {
+        showError("500", r.body.message || "Something went wrong scoring this order.");
+      } else {
+        showError("500", "Unexpected response (" + r.status + ").");
+      }
+    }).catch(function () {
+      clearTimeout(timer);
+      showError("network", "Can't reach the service. Is `uvicorn app:app` running?");
+    }).finally(function () {
+      checkBtn.disabled = false;
+      checkBtn.textContent = "Check risk";
+      checkHealth();
+    });
+  });
+
+  exampleSelect.addEventListener("change", function () {
+    var key = exampleSelect.value;
+    if (!key || !EXAMPLES[key]) return;
+    var e = EXAMPLES[key];
+    document.getElementById("order_id").value = e.order_id;
+    document.getElementById("customer_id").value = e.customer_id;
+    document.getElementById("order_placed_at").value = nowLocalInputValue();
+    document.getElementById("sku").value = e.sku;
+    document.getElementById("sales_channel").value = e.sales_channel;
+    document.getElementById("payment_mode").value = e.payment_mode;
+    document.getElementById("discount_pct").value = e.discount_pct;
+    document.getElementById("qty").value = e.qty;
+    document.getElementById("order_value_inr").value = e.order_value_inr;
+    document.getElementById("promised_delivery_days").value = e.promised_delivery_days;
+    document.getElementById("delivery_pincode").value = e.delivery_pincode;
+    document.getElementById("is_gift").value = e.is_gift;
+    document.getElementById("customer_prior_orders").value = e.customer_prior_orders;
+    document.getElementById("customer_prior_returns").value = e.customer_prior_returns;
+    document.getElementById("delivery_note").value = e.delivery_note || "";
+  });
+
+  populateSkus();
+  document.getElementById("order_placed_at").value = nowLocalInputValue();
+  checkHealth();
+})();
+</script>
+</body>
+</html>
