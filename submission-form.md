@@ -151,7 +151,7 @@ without it.
 
 ## What did you use AI for? Which tools and models, where they helped, where they misled you, what you threw away. Link your three-minute screen recording here.
 
-Claude (Sonnet, via Claude Code) throughout: reading and cross-checking the data pack
+Claude (Sonnet) throughout: reading and cross-checking the data pack
 (`train.csv`/`test_unlabelled.csv`, `customers.csv`, `products.csv`, `ops-policy.pdf`, the
 email thread) for the leakage, duplication, and currency issues above; designing the
 feature set, validation scheme, and cost-based threshold; and writing `train.py`, `app.py`,
@@ -174,7 +174,7 @@ Screen recording: **[(https://drive.google.com/drive/folders/1R0uTrjiRstVakM-m_a
 
 ## Your Public Google Drive Link
 
-**[ADD LINK — not yet created]**
+**[https://drive.google.com/drive/folders/1R0uTrjiRstVakM-m_aWhNSVgGbKJamXl?usp=sharing]**
 
 ## Someone picks this up on Monday and you are unreachable. The three things they need to know.
 
